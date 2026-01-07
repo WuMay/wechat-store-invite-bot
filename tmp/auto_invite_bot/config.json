@@ -1,0 +1,11 @@
+{
+  "headless": false,
+  "implicit_wait": 10,
+  "page_load_timeout": 30,
+  "min_delay": 1.0,
+  "max_delay": 3.0,
+  "max_retries": 3,
+  "click_retry_delay": 1.0,
+  "record_file": "/tmp/auto_invite_bot/invite_records.json",
+  "log_file": "/tmp/auto_invite_bot/bot.log"
+}
