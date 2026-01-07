@@ -363,7 +363,7 @@ class WechatStoreInviteBot:
 def main():
     """主函数"""
     # 配置达人广场的起始URL
-    START_URL = "https://你的达人广场URL"  # 需要替换为实际的URL
+    START_URL = "https://store.weixin.qq.com/shop/findersquare/find"  # 微信小店达人广场
 
     # 最大处理页数（None表示不限制）
     MAX_PAGES = None
