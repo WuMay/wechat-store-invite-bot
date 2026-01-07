@@ -63,19 +63,64 @@ class WechatStoreInviteBot:
         if self.config.get('headless', False):
             chrome_options.add_argument('--headless')
 
-        # 优化浏览器设置
+        # 获取系统Chrome用户数据目录
+        import platform
+        import os
+        import getpass
+
+        system = platform.system()
+        username = getpass.getuser()
+
+        if system == 'Windows':
+            user_data_dir = f"C:\\Users\\{username}\\AppData\\Local\\Google\\Chrome\\User Data"
+        elif system == 'Darwin':  # Mac
+            user_data_dir = f"/Users/{username}/Library/Application Support/Google/Chrome"
+        else:  # Linux
+            user_data_dir = f"/home/{username}/.config/google-chrome"
+
+        # 使用系统Chrome的用户数据目录，共享登录状态、Cookie、缓存等
+        chrome_options.add_argument(f'--user-data-dir={user_data_dir}')
+        chrome_options.add_argument('--profile-directory=Default')
+
+        # ⭐ 增强反检测措施 - 让浏览器看起来像真人操作
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
+
+        # 移除Chrome正在受到自动测试软件控制的提示
+        chrome_options.add_argument('--disable-infobars')
+
+        # 模拟真实浏览器的启动参数
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--window-size=1920,1080')
 
-        # 设置用户代理，模拟真实浏览器
+        # ⭐ 使用真实的用户代理字符串
         chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+
+        # ⭐ 添加更多真实浏览器的参数
+        chrome_options.add_argument('--start-maximized')  # 最大化窗口
+        chrome_options.add_argument('--disable-extensions')  # 禁用扩展插件（可选）
+        chrome_options.add_argument('--disable-background-timer-throttling')
+        chrome_options.add_argument('--disable-backgrounding-occluded-windows')
+        chrome_options.add_argument('--disable-renderer-backgrounding')
+
+        # 禁用WebRTC（防止IP泄露）
+        chrome_options.add_argument('--disable-webrtc')
 
         # 初始化驱动
         service = Service(ChromeDriverManager().install())
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
+
+        # ⭐ 移除webdriver属性（重要反检测措施）
+        self.driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+            'source': '''
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                })
+            '''
+        })
 
         # 设置页面加载超时
         self.driver.set_page_load_timeout(self.config.get('page_load_timeout', 30))
